@@ -2,26 +2,38 @@ import { useState, useEffect } from 'react';
 import './App.css';
 
 function App() {
-  const [expenses, setExpenses] = useState([]);
+  const [initiatives, setInitiatives] = useState([]);
   const [title, setTitle] = useState('');
-  const [amount, setAmount] = useState('');
-  const [category, setCategory] = useState('General');
+  const [owner, setOwner] = useState('');
+  const [status, setStatus] = useState('On Track');
+  const [priority, setPriority] = useState('Medium');
+  const [notes, setNotes] = useState('');
+  
   const [loading, setLoading] = useState(true);
+  const [apiError, setApiError] = useState(null);
 
-  // Consider fetching API URL from environment, using localhost for dev
-  const API_URL = 'http://127.0.0.1:5000/api/expenses';
+  const API_URL = 'http://127.0.0.1:5000/api/initiatives';
 
   useEffect(() => {
-    fetchExpenses();
+    fetchInitiatives();
   }, []);
 
-  const fetchExpenses = async () => {
+  const fetchInitiatives = async () => {
     try {
       const response = await fetch(API_URL);
       const data = await response.json();
-      setExpenses(data);
+      if (Array.isArray(data)) {
+        setInitiatives(data);
+        setApiError(null);
+      } else {
+        console.error('API Error:', data.error);
+        setApiError(data.error);
+        setInitiatives([]);
+      }
     } catch (error) {
-      console.error('Error fetching expenses:', error);
+      console.error('Fetch error:', error);
+      setApiError('Unable to reach the Clarity server. Ensure backend is running.');
+      setInitiatives([]);
     } finally {
       setLoading(false);
     }
@@ -29,148 +41,198 @@ function App() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!title || !amount) return;
+    if (!title || !owner) return;
 
     try {
       const response = await fetch(API_URL, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          title,
-          amount: parseFloat(amount),
-          category
-        }),
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title, owner, status, priority, notes }),
       });
 
       if (response.ok) {
         setTitle('');
-        setAmount('');
-        setCategory('General');
-        fetchExpenses();
+        setNotes('');
+        // Keep owner, status, priority as defaults for rapid entry
+        fetchInitiatives();
+      } else {
+        const err = await response.json();
+        setApiError(err.error);
       }
     } catch (error) {
-      console.error('Error adding expense:', error);
+      console.error('Submit error:', error);
     }
   };
 
   const handleDelete = async (id) => {
     try {
-      const response = await fetch(`${API_URL}/${id}`, {
-        method: 'DELETE',
-      });
-
+      const response = await fetch(`${API_URL}/${id}`, { method: 'DELETE' });
       if (response.ok) {
-        setExpenses(expenses.filter(expense => expense.id !== id));
+        setInitiatives(initiatives.filter(init => init.id !== id));
       }
     } catch (error) {
-      console.error('Error deleting expense:', error);
+      console.error('Delete error:', error);
     }
   };
 
-  const totalExpenses = expenses.reduce((sum, item) => sum + item.amount, 0);
+  const getStatusClass = (stat) => {
+    switch (stat) {
+      case 'On Track': return 'status-on-track';
+      case 'At Risk': return 'status-at-risk';
+      case 'Blocked': return 'status-blocked';
+      default: return '';
+    }
+  };
+
+  const getPriorityColor = (pri) => {
+    switch (pri) {
+      case 'High': return 'var(--priority-high)';
+      case 'Medium': return 'var(--priority-medium)';
+      case 'Low': return 'var(--priority-low)';
+      default: return '#71717A';
+    }
+  };
+
+  const formatDate = (isoString) => {
+    const date = new Date(isoString);
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+  };
 
   return (
-    <div className="app-container">
-      <header className="header animate-fade-in">
-        <h1>NexusFi Tracker</h1>
-        <p>Premium Expense Management</p>
+    <div className="dashboard-container animate-slide-up">
+      <header className="dashboard-header">
+        <h1>Clarity Pulse</h1>
+        <p>Enterprise Initiative Tracking & Real-Time Alignment</p>
       </header>
 
-      <main className="dashboard">
-        <section className="glass card animate-fade-in" style={{ animationDelay: '0.1s' }}>
-          <h2>Add Expense</h2>
+      {apiError && (
+        <div className="error-state glass-panel">
+          <h4>Database Connection Warning</h4>
+          <p>{apiError}</p>
+        </div>
+      )}
+
+      <main className="main-content">
+        {/* Left Sidebar Form */}
+        <aside className="glass-panel pulse-form">
+          <h2>Post Update</h2>
           <form onSubmit={handleSubmit}>
-            <div className="form-group">
-              <label>Title</label>
+            <div className="form-field">
+              <label>Initiative Title</label>
               <input
                 type="text"
-                className="form-input"
-                placeholder="E.g., Groceries"
+                className="input-control"
+                placeholder="e.g. Q3 Migration Project"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 required
               />
             </div>
-            
-            <div className="form-group">
-              <label>Amount ($)</label>
+
+            <div className="form-field">
+              <label>Project Owner</label>
               <input
-                type="number"
-                className="form-input"
-                placeholder="0.00"
-                step="0.01"
-                min="0.01"
-                value={amount}
-                onChange={(e) => setAmount(e.target.value)}
+                type="text"
+                className="input-control"
+                placeholder="Name or Team"
+                value={owner}
+                onChange={(e) => setOwner(e.target.value)}
                 required
               />
             </div>
 
-            <div className="form-group">
-              <label>Category</label>
+            <div className="form-field">
+              <label>Current Status</label>
               <select 
-                className="form-input"
-                value={category}
-                onChange={(e) => setCategory(e.target.value)}
+                className="input-control"
+                value={status}
+                onChange={(e) => setStatus(e.target.value)}
               >
-                <option value="General">General</option>
-                <option value="Food & Dining">Food & Dining</option>
-                <option value="Transportation">Transportation</option>
-                <option value="Entertainment">Entertainment</option>
-                <option value="Shopping">Shopping</option>
-                <option value="Bills & Utilities">Bills & Utilities</option>
+                <option value="On Track">🟢 On Track</option>
+                <option value="At Risk">🟡 At Risk</option>
+                <option value="Blocked">🔴 Blocked</option>
               </select>
             </div>
 
-            <button type="submit" className="btn-primary">
-              Add Expense
+            <div className="form-field">
+              <label>Priority Layer</label>
+              <select 
+                className="input-control"
+                value={priority}
+                onChange={(e) => setPriority(e.target.value)}
+              >
+                <option value="High">High</option>
+                <option value="Medium">Medium</option>
+                <option value="Low">Low</option>
+              </select>
+            </div>
+
+            <div className="form-field">
+              <label>Latest Notes</label>
+              <textarea
+                className="input-control"
+                placeholder="Briefly summarize progress or blockers..."
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+              />
+            </div>
+
+            <button type="submit" className="btn-submit">
+              Broadcast Update
             </button>
           </form>
-        </section>
+        </aside>
 
-        <section className="glass card animate-fade-in" style={{ animationDelay: '0.2s' }}>
-          <h2>Overview</h2>
-          
-          <div className="stats-container">
-            <div className="stat-box">
-              <p>Total Expenses</p>
-              <h3>${totalExpenses.toFixed(2)}</h3>
-            </div>
-            <div className="stat-box">
-              <p>Transactions</p>
-              <h3 style={{ color: '#a5b4fc' }}>{expenses.length}</h3>
-            </div>
+        {/* Right Feed Panel */}
+        <section className="feed-container">
+          <div className="feed-header">
+            <h2>Live Pulse Feed</h2>
+            <span style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
+              {initiatives.length} Active
+            </span>
           </div>
 
-          <div className="expense-list">
+          <div className="initiatives-feed">
             {loading ? (
-              <div className="empty-state">Loading expenses...</div>
-            ) : expenses.length === 0 ? (
+              <div className="empty-state">Syncing data...</div>
+            ) : initiatives.length === 0 && !apiError ? (
               <div className="empty-state">
-                <p>No expenses found. Start tracking today!</p>
+                No active initiatives found. Post an update to begin tracking.
               </div>
             ) : (
-              expenses.map((expense) => (
-                <div key={expense.id} className="expense-item">
-                  <div className="expense-info">
-                    <h4>{expense.title}</h4>
-                    <div className="expense-meta">
-                      <span className="category-badge">{expense.category}</span>
-                      <span>{expense.date.split(' ')[0]}</span>
+              initiatives.map((init, index) => (
+                <article 
+                  key={init.id} 
+                  className="glass-panel initiative-card animate-slide-up"
+                  style={{ animationDelay: `${index * 0.05}s` }}
+                >
+                  <div className="card-top">
+                    <div className="title-row">
+                      <h3>{init.title}</h3>
+                      <p>Owned by <strong>{init.owner}</strong></p>
+                    </div>
+                    <span className={`status-badge ${getStatusClass(init.status)}`}>
+                      {init.status}
+                    </span>
+                  </div>
+
+                  {init.notes && (
+                    <div className="card-notes">
+                      {init.notes}
+                    </div>
+                  )}
+
+                  <div className="card-bottom">
+                    <div className="priority-badge">
+                      <span className="priority-dot" style={{ backgroundColor: getPriorityColor(init.priority) }}></span>
+                      {init.priority} Priority
+                    </div>
+                    <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+                      <span>{formatDate(init.created_at)}</span>
+                      <button className="btn-delete" onClick={() => handleDelete(init.id)}>Remove</button>
                     </div>
                   </div>
-                  <div className="expense-actions">
-                    <span className="expense-amount">${expense.amount.toFixed(2)}</span>
-                    <button 
-                      className="btn-danger"
-                      onClick={() => handleDelete(expense.id)}
-                    >
-                      Delete
-                    </button>
-                  </div>
-                </div>
+                </article>
               ))
             )}
           </div>

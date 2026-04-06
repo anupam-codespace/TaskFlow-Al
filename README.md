@@ -1,33 +1,24 @@
-# NexusFi Tracker
+# Clarity Pulse
 
-NexusFi Tracker is a premium, minimalistic full-stack expense management web application. It combines a visually striking frontend layout featuring glassmorphism elements with a robust, simple REST API backend.
+Clarity Pulse is a premium, enterprise-ready real-time initiative tracker. It's designed to replace messy spreadsheets with a high-end, extremely fast interface where leaders and employees can post status updates, blockages, and priority levels for their current projects.
 
 ## Architecture
 
-- **Frontend**: React (Vite-powered for rapid development), Vanilla CSS for custom, aesthetic-heavy utility components. 
-- **Backend**: Python with Flask, providing RESTful endpoints.
-- **Database**: Supabase (PostgreSQL), managed via the `supabase` Python API client.
+- **Frontend**: React (Vite-powered for rapid development), custom strict vanilla CSS design system inspired by top tier enterprise products like Linear and Vercel (dark mode natively). 
+- **Backend**: Python with Flask, providing robust secure endpoints.
+- **Database**: Supabase (PostgreSQL), managed via the strictly-typed `supabase` Python API client.
 
-## Technical Decisions
+## Key Features & Enterprise Approach
 
-1. **Simplicity Over Complexity**: 
-   - Uses Supabase to handle database hosting via PostgreSQL, providing a fast and highly resilient storage engine without complex configurations locally.
-   - Eschews heavy state-management libraries (like Redux) in the frontend for native React `useState` and `useEffect`, keeping bundle size low and code highly readable.
-2. **Design Philosophy**: 
-   - Vanilla CSS was intentionally chosen over heavy CSS frameworks to exercise strict control over layout, micro-animations, and custom gradient overlays aligning with a modern "Futuristic Finance Dashboard" requirement.
-3. **Correctness & Resilience**: 
-   - Backend enforces validation before passing variables to the Supabase client.
-   - Empty state fallbacks in the frontend prevent unpredictable render states.
-4. **CORS Configuration**: Flask-CORS is enabled out of the gate to handle resource sharing effortlessly, reflecting standard decoupled API-Client architecture logic.
-
-## AI Usage
-
-This project heavily leverages AI assistance for:
-- Bolstering boilerplate scaffolding.
-- Structuring aesthetic "Wow-factor" frontend styles (e.g., animations and custom backdrop-filters).
-- Ensuring prompt resolution of any configuration blockers rapidly via an active agentic approach.
-
-See `claude.md` and `Walkthrough.md` for extended details.
+1. **Information Density & Speed**: 
+   - Forms are quick to tab through, ensuring "Posting an update" has zero friction. Instead of a deep ticketing system, this acts as a "What's the status of X right now" pulse board.
+   - Built explicitly avoiding overly complex abstractions like Redux; local state `useState` prevents deep re-renders making interaction instant.
+2. **Design Elements**: 
+   - Implemented a "Glass-panel" dark theme. Avoids harsh gradients in favor of subtle bordering, muted secondary texts (`#A1A1AA`), and stark contrast badges (`On Track`, `At Risk`, `Blocked`). Very easy on the eyes for all-day screen usage.
+3. **Change Resilience**: 
+   - Backend gracefully returns 500 error blocks instead of killing the Python Thread when the `SUPABASE_KEY` is missing, allowing the React frontend to intercept and warn the user. 
+4. **Safe Interactions**: 
+   - Dropdown selections natively cast statuses preventing improper strings from leaking into the database via Flask.
 
 ## Running Locally
 

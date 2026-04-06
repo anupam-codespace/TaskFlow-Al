@@ -1,31 +1,25 @@
-# NexusFi Tracker - Project Walkthrough
+# Clarity Pulse - Project Walkthrough
 
-## 1. Architecture Overview
-This application follows a classical decoupled **Client-Server Architecture**.
-- **Frontend** acts as the client, built with React and Vite. It serves static assets and dynamically renders user interfaces by communicating with external APIs.
-- **Backend** acts as the server, powered by Flask. It handles business logic, processing incoming RESTful requests (GET, POST, DELETE), and managing database interactions.
-- **Database**: We use **Supabase** (PostgreSQL) hosted remotely. The backend uses the official `supabase` Python client to perform data mutations and retrievals. This offloads database management and provides scalable limits seamlessly.
+## 1. Product Pivot & Architecture
+We successfully pivoted from an Expense Tracker into **Clarity Pulse**, a sophisticated enterprise status board. This application fits the real-world corporate environment much better by creating a seamless feed connecting teammates with live project blocker information. 
+- **Frontend** built with React using a bespoke, premium dark-mode aesthetic. 
+- **Backend** acts as the server, powered by Flask. 
+- **Database**: We use **Supabase** (PostgreSQL) hosted remotely. 
 
 ## 2. File Structure Boundaries
 Maintaining clear separation of concerns:
 - **`/backend/`**: Contains the server logic (`app.py`, `requirements.txt`), Supabase DB setup (`schema.sql`), and environment secrets (`.env`).
 - **`/frontend/`**: Contains the React ecosystem (`src/`, `App.jsx`, `index.css`).
-- Communication exclusively happens across standard HTTP methods via `http://127.0.0.1:5000/api/expenses`, maintaining rigid system boundaries.
+- Communication exclusively happens across standard HTTP methods via `http://127.0.0.1:5000/api/initiatives`.
 
 ## 3. Technical Decisions & Interface Safety
-- **Framework Choice**: React supports robust, predictable view rendering. Flask is highly explicit and lightweight out-of-the-box. Both avoid unnecessarily steep configurations.
-- **Supabase Integration**: By using `supabase-py` instead of generic ORMs, the application directly integrates with cloud-first paradigms while keeping server payload formatting minimal. 
-- **Interface Safety**: Inputs on the frontend `type="number"` with `min="0.01"` combined with backend validation (`if not data.get('title')...`) prevent invalid states implicitly (empty expenses or malformed queries). Float parsing and strict dictionary access guarantee type-safety on critical payloads before dispatching to Supabase.
+- **High-End UI**: Abandoned standard bright colors to invoke a focus-heavy "dark mode office" feel. Employs crisp 1px borders via `rgba` to separate information hierarchy (similar to Linear). 
+- **Graceful Error Handling**: Supabase initialization issues do not kill the server. The python script actively catches initialization faults during `require_db()` meaning the API stays alive simply to inform the Frontend UI it is disconnected. The Frontend UI intercepts that string and cleanly produces a red warning box over the feed without crashing.
 
 ## 4. Change Resilience & Verification
-- State is compartmentalized cleanly within React. Changing how amounts are validated locally will not break rendering paths elsewhere. Backend endpoint modularity means adding a new `PUT` method won't disrupt existing `GET` mechanisms.
-- Verification occurs via strict API response handling (`if response.ok`). Try-catch blocks ensure client-side exceptions do not crash the component silently.
+- State is compartmentalized cleanly within React. Changing how priorities render won't break Form submitting paths elsewhere.
+- Verification occurs via strict API response handling (`if response.ok`). Try-catch blocks ensure client-side exceptions do not crash the component silently. Backend validation guarantees fields like "status" are populated before they touch Postgres.
 
 ## 5. Observability
 - All errors are distinctly visible. Failed frontend fetches log strictly to `console.error()`.
 - Failed backend executions return verbose `500 Internal Server Error` strings or `400 Bad Request` messages natively instead of crashing the Python process, allowing for fast API diagnosis via the browser's Network tab.
-
-## 6. AI Usage & Guidance Setup
-- **Code Structuring**: Boilerplate initialization was highly optimized utilizing AI agents to build standard REST blueprints and frontend scaffolding automatically.
-- **Guidance & Safety**: The AI was provided with a constraints guidance file (`claude.md`) dictating layout instructions, visual specifications, routing rules, and constraints to ensure output reliability and enforce a premium aesthetic approach securely.
-- **Risk Evaluation**: The main risk with AI generation is the hallucination of non-existent component logic or incorrect CSS properties. This was mitigated by having strict file boundary definitions and using vanilla CSS variables instead of untailored utility frameworks. All AI generated structures were reviewed prior to commit.

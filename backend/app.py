@@ -15,48 +15,53 @@ CORS(app, resources={r"/api/*": {"origins": "*"}})
 SUPABASE_URL = os.getenv("SUPABASE_URL")
 SUPABASE_KEY = os.getenv("SUPABASE_ANON_KEY")
 
-if not SUPABASE_URL or not SUPABASE_KEY:
-    raise ValueError("Missing SUPABASE_URL or SUPABASE_ANON_KEY in environment variables")
+supabase: Client = None
+if SUPABASE_URL and SUPABASE_KEY:
+    supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
 
-supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
+def require_db():
+    if not supabase:
+        raise ValueError("Supabase is not configured yet. Please set up the .env file with Supabase credentials.")
 
-@app.route('/api/expenses', methods=['GET'])
-def get_expenses():
+@app.route('/api/initiatives', methods=['GET'])
+def get_initiatives():
     try:
-        # Fetch expenses, sorted by created_at or date descending
-        response = supabase.table('expenses').select('*').order('date', desc=True).execute()
+        require_db()
+        # Fetch initiatives, sorted by created_at descending
+        response = supabase.table('initiatives').select('*').order('created_at', desc=True).execute()
         return jsonify(response.data), 200
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-@app.route('/api/expenses', methods=['POST'])
-def add_expense():
+@app.route('/api/initiatives', methods=['POST'])
+def add_initiative():
     data = request.json
-    if not data or not data.get('title') or not data.get('amount') or not data.get('category'):
-        return jsonify({'error': 'Missing required fields'}), 400
+    if not data or not data.get('title') or not data.get('owner') or not data.get('status') or not data.get('priority'):
+        return jsonify({'error': 'Missing required fields (title, owner, status, priority)'}), 400
     
     try:
-        new_expense = {
+        require_db()
+        new_initiative = {
             'title': data['title'],
-            'category': data['category'],
-            'amount': float(data['amount'])
-            # date is automatically set by Supabase default value if omitted, or we can let Postgres handle it
+            'owner': data['owner'],
+            'status': data['status'],
+            'priority': data['priority'],
+            'notes': data.get('notes', '')
         }
-        response = supabase.table('expenses').insert(new_expense).execute()
-        # insert returns the inserted row in response.data
+        response = supabase.table('initiatives').insert(new_initiative).execute()
         if len(response.data) > 0:
             return jsonify(response.data[0]), 201
         else:
-            return jsonify({'error': 'Failed to insert expense'}), 500
+            return jsonify({'error': 'Failed to insert initiative status'}), 500
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-@app.route('/api/expenses/<int:id>', methods=['DELETE'])
-def delete_expense(id):
+@app.route('/api/initiatives/<int:id>', methods=['DELETE'])
+def delete_initiative(id):
     try:
-        # Check if exists (optional but good practice, though delete will just do nothing if not found)
-        response = supabase.table('expenses').delete().eq('id', id).execute()
-        return jsonify({'message': 'Expense deleted'}), 200
+        require_db()
+        response = supabase.table('initiatives').delete().eq('id', id).execute()
+        return jsonify({'message': 'Initiative updated removed'}), 200
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
