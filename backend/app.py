@@ -1,44 +1,31 @@
 from flask import Flask, jsonify, request
 from flask_cors import CORS
-from flask_sqlalchemy import SQLAlchemy
-from datetime import datetime
+from supabase import create_client, Client
 import os
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
 
 app = Flask(__name__)
 # Enable CORS for React frontend (default vite port is 5173)
 CORS(app, resources={r"/api/*": {"origins": "*"}})
 
-# Configure SQLAlchemy (SQLite database)
-basedir = os.path.abspath(os.path.dirname(__file__))
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(basedir, 'expenses.db')
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+# Initialize Supabase client
+SUPABASE_URL = os.getenv("SUPABASE_URL")
+SUPABASE_KEY = os.getenv("SUPABASE_ANON_KEY")
 
-db = SQLAlchemy(app)
+if not SUPABASE_URL or not SUPABASE_KEY:
+    raise ValueError("Missing SUPABASE_URL or SUPABASE_ANON_KEY in environment variables")
 
-class Expense(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    title = db.Column(db.String(100), nullable=False)
-    category = db.Column(db.String(50), nullable=False)
-    amount = db.Column(db.Float, nullable=False)
-    date = db.Column(db.DateTime, default=datetime.utcnow)
-
-    def to_dict(self):
-        return {
-            'id': self.id,
-            'title': self.title,
-            'category': self.category,
-            'amount': self.amount,
-            'date': self.date.strftime('%Y-%m-%d %H:%M:%S')
-        }
-
-with app.app_context():
-    db.create_all()
+supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 @app.route('/api/expenses', methods=['GET'])
 def get_expenses():
     try:
-        expenses = Expense.query.order_by(Expense.date.desc()).all()
-        return jsonify([expense.to_dict() for expense in expenses]), 200
+        # Fetch expenses, sorted by created_at or date descending
+        response = supabase.table('expenses').select('*').order('date', desc=True).execute()
+        return jsonify(response.data), 200
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
@@ -49,26 +36,26 @@ def add_expense():
         return jsonify({'error': 'Missing required fields'}), 400
     
     try:
-        new_expense = Expense(
-            title=data['title'],
-            category=data['category'],
-            amount=float(data['amount'])
-        )
-        db.session.add(new_expense)
-        db.session.commit()
-        return jsonify(new_expense.to_dict()), 201
+        new_expense = {
+            'title': data['title'],
+            'category': data['category'],
+            'amount': float(data['amount'])
+            # date is automatically set by Supabase default value if omitted, or we can let Postgres handle it
+        }
+        response = supabase.table('expenses').insert(new_expense).execute()
+        # insert returns the inserted row in response.data
+        if len(response.data) > 0:
+            return jsonify(response.data[0]), 201
+        else:
+            return jsonify({'error': 'Failed to insert expense'}), 500
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
 @app.route('/api/expenses/<int:id>', methods=['DELETE'])
 def delete_expense(id):
     try:
-        expense = Expense.query.get(id)
-        if not expense:
-            return jsonify({'error': 'Expense not found'}), 404
-        
-        db.session.delete(expense)
-        db.session.commit()
+        # Check if exists (optional but good practice, though delete will just do nothing if not found)
+        response = supabase.table('expenses').delete().eq('id', id).execute()
         return jsonify({'message': 'Expense deleted'}), 200
     except Exception as e:
         return jsonify({'error': str(e)}), 500

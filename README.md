@@ -6,17 +6,17 @@ NexusFi Tracker is a premium, minimalistic full-stack expense management web app
 
 - **Frontend**: React (Vite-powered for rapid development), Vanilla CSS for custom, aesthetic-heavy utility components. 
 - **Backend**: Python with Flask, providing RESTful endpoints.
-- **Database**: SQLite, managed via Flask-SQLAlchemy.
+- **Database**: Supabase (PostgreSQL), managed via the `supabase` Python API client.
 
 ## Technical Decisions
 
 1. **Simplicity Over Complexity**: 
-   - Uses SQLite to eliminate explicit database hosting/setup dependencies for quick local spins up.
+   - Uses Supabase to handle database hosting via PostgreSQL, providing a fast and highly resilient storage engine without complex configurations locally.
    - Eschews heavy state-management libraries (like Redux) in the frontend for native React `useState` and `useEffect`, keeping bundle size low and code highly readable.
 2. **Design Philosophy**: 
    - Vanilla CSS was intentionally chosen over heavy CSS frameworks to exercise strict control over layout, micro-animations, and custom gradient overlays aligning with a modern "Futuristic Finance Dashboard" requirement.
 3. **Correctness & Resilience**: 
-   - Backend enforces schema validation securely via SQLAlchemy constraints.
+   - Backend enforces validation before passing variables to the Supabase client.
    - Empty state fallbacks in the frontend prevent unpredictable render states.
 4. **CORS Configuration**: Flask-CORS is enabled out of the gate to handle resource sharing effortlessly, reflecting standard decoupled API-Client architecture logic.
 
@@ -31,7 +31,12 @@ See `claude.md` and `Walkthrough.md` for extended details.
 
 ## Running Locally
 
-1. **Backend**:
+1. **Supabase Database Setup**:
+   - Go to Supabase, create a project.
+   - Run the SQL contained in `backend/schema.sql` in your Supabase SQL Editor.
+   - Rename `backend/.env.example` to `backend/.env` and paste your project URL and Anon Key.
+
+2. **Backend**:
    ```bash
    cd backend
    python -m venv venv
@@ -40,7 +45,7 @@ See `claude.md` and `Walkthrough.md` for extended details.
    python app.py
    ```
 
-2. **Frontend**:
+3. **Frontend**:
    ```bash
    cd frontend
    npm install
