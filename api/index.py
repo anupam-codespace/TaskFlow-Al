@@ -1,18 +1,9 @@
-from flask import Flask, jsonify
-import os
+from http.server import BaseHTTPRequestHandler
 
-app = Flask(__name__)
-
-@app.route('/api/health')
-@app.route('/health')
-def health():
-    return jsonify({
-        "status": "minimal-ok",
-        "env": os.getenv("FLASK_ENV", "none"),
-        "db": "present" if os.getenv("DATABASE_URL") else "absent"
-    })
-
-@app.route('/api/<path:path>')
-@app.route('/<path:path>')
-def catch_all(path):
-    return jsonify({"error": "Minimal app running - main app failed to load", "path": path}), 500
+class handler(BaseHTTPRequestHandler):
+    def do_GET(self):
+        self.send_response(200)
+        self.send_header('Content-type','application/json')
+        self.end_headers()
+        self.wfile.write('{"status": "vercel-native-ok"}'.encode())
+        return
