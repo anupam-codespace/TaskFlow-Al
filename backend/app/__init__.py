@@ -54,8 +54,11 @@ def create_app(config_name: str = "development") -> Flask:
 
     # ── Database initialisation ───────────────────────────────────────────────
     with app.app_context():
-        db.create_all()
-        _seed_if_empty()
+        try:
+            db.create_all()
+            _seed_if_empty()
+        except Exception as e:
+            app.logger.error("Database initialization failed: %s", e)
 
     app.logger.info("TaskFlow API started in '%s' mode", config_name)
     return app
