@@ -13,18 +13,14 @@
       }
     }
   ],
-  "routes": [
+  "rewrites": [
     {
-      "src": "/api/(.*)",
-      "dest": "backend/run.py"
+      "source": "/api/(.*)",
+      "destination": "backend/run.py"
     },
     {
-      "src": "/assets/(.*)",
-      "dest": "frontend/dist/assets/$1"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "frontend/dist/$1"
+      "source": "/(.*)",
+      "destination": "/frontend/$1"
     }
   ]
 }

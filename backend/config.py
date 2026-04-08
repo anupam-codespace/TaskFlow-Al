@@ -19,12 +19,15 @@ class Config:
     SECRET_KEY = os.getenv("SECRET_KEY", "dev-secret-change-in-production")
 
     # Get the DATABASE_URL and fix the connection string for SQLAlchemy
-    db_url = os.getenv(
-        "DATABASE_URL",
-        f"sqlite:///{os.path.join(BASE_DIR, 'taskflow.db')}"
-    )
-    if db_url and db_url.startswith("postgres://"):
-        db_url = db_url.replace("postgres://", "postgresql://", 1)
+    db_url = os.getenv("DATABASE_URL")
+    
+    if db_url:
+        if db_url.startswith("postgres://"):
+            db_url = db_url.replace("postgres://", "postgresql://", 1)
+    else:
+        # Fallback to SQLite in /tmp for serverless environments
+        db_path = os.path.join("/tmp", "taskflow.db") if os.getenv("VERCEL") else os.path.join(BASE_DIR, "taskflow.db")
+        db_url = f"sqlite:///{db_path}"
 
     SQLALCHEMY_DATABASE_URI = db_url
     SQLALCHEMY_TRACK_MODIFICATIONS = False
