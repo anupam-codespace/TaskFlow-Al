@@ -2,7 +2,7 @@
   "version": 2,
   "builds": [
     {
-      "src": "backend/run.py",
+      "src": "api/index.py",
       "use": "@vercel/python"
     },
     {
@@ -16,11 +16,11 @@
   "rewrites": [
     {
       "source": "/api/(.*)",
-      "destination": "backend/run.py"
+      "destination": "api/index.py"
     },
     {
       "source": "/(.*)",
-      "destination": "/frontend/$1"
+      "destination": "frontend/$1"
     }
   ]
 }
