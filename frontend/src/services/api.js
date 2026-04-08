@@ -8,7 +8,7 @@
  * - Changing the base URL is a 1-line change.
  */
 
-const BASE_URL = import.meta.env.VITE_API_URL || (import.meta.env.PROD ? '/api' : 'http://127.0.0.1:5000/api');
+const BASE_URL = import.meta.env.VITE_API_URL || (import.meta.env.PROD ? '/api' : 'http://127.0.0.1:5001/api');
 
 class ApiError extends Error {
   constructor(message, status) {

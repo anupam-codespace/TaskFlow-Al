@@ -598,7 +598,7 @@ export default function App() {
     } catch (err) {
       console.error('Failed to load projects:', err);
       setBackendError(true);
-      addToast('Cannot connect to backend. Is Flask running on port 5000?', 'error');
+      addToast('Cannot connect to backend. Is Flask running on port 5001?', 'error');
     } finally {
       setLoadingProjects(false);
     }
@@ -687,7 +687,7 @@ export default function App() {
             </span>
           )}
           <a
-            href="http://127.0.0.1:5000/api/health"
+            href="http://127.0.0.1:5001/api/health"
             target="_blank"
             rel="noopener noreferrer"
             className="btn btn-ghost btn-sm"
