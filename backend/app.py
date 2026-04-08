@@ -23,45 +23,46 @@ def require_db():
     if not supabase:
         raise ValueError("Supabase is not configured yet. Please set up the .env file with Supabase credentials.")
 
-@app.route('/api/initiatives', methods=['GET'])
-def get_initiatives():
+@app.route('/api/login', methods=['POST'])
+def login():
+    data = request.json
+    uid = data.get('id')
     try:
         require_db()
-        # Fetch initiatives, sorted by created_at descending
-        response = supabase.table('initiatives').select('*').order('created_at', desc=True).execute()
+        response = supabase.table('users').select('*').eq('id', uid).execute()
+        if len(response.data) > 0:
+            return jsonify(response.data[0]), 200
+        else:
+            return jsonify({'error': 'User ID not found. Use MGR-01 or ENG-01'}), 404
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/projects', methods=['GET'])
+def get_projects():
+    try:
+        require_db()
+        # Fetch projects
+        response = supabase.table('projects').select('*').order('created_at', desc=True).execute()
         return jsonify(response.data), 200
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-@app.route('/api/initiatives', methods=['POST'])
-def add_initiative():
-    data = request.json
-    if not data or not data.get('title') or not data.get('owner') or not data.get('status') or not data.get('priority'):
-        return jsonify({'error': 'Missing required fields (title, owner, status, priority)'}), 400
-    
+@app.route('/api/projects/<int:project_id>/events', methods=['GET'])
+def get_project_events(project_id):
     try:
         require_db()
-        new_initiative = {
-            'title': data['title'],
-            'owner': data['owner'],
-            'status': data['status'],
-            'priority': data['priority'],
-            'notes': data.get('notes', '')
-        }
-        response = supabase.table('initiatives').insert(new_initiative).execute()
-        if len(response.data) > 0:
-            return jsonify(response.data[0]), 201
-        else:
-            return jsonify({'error': 'Failed to insert initiative status'}), 500
+        response = supabase.table('project_events').select('*').eq('project_id', project_id).order('created_at', desc=True).execute()
+        return jsonify(response.data), 200
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-@app.route('/api/initiatives/<int:id>', methods=['DELETE'])
-def delete_initiative(id):
+@app.route('/api/projects', methods=['POST'])
+def create_project():
+    data = request.json
     try:
         require_db()
-        response = supabase.table('initiatives').delete().eq('id', id).execute()
-        return jsonify({'message': 'Initiative updated removed'}), 200
+        response = supabase.table('projects').insert(data).execute()
+        return jsonify(response.data[0]), 201
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
