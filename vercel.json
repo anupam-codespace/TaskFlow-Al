@@ -1,26 +1,20 @@
 {
-  "version": 2,
-  "builds": [
-    {
-      "src": "backend/run.py",
-      "use": "@vercel/python"
+  "experimentalServices": {
+    "frontend": {
+      "entrypoint": "frontend"
     },
-    {
-      "src": "frontend/package.json",
-      "use": "@vercel/static-build",
-      "config": {
-        "distDir": "dist"
-      }
+    "backend": {
+      "entrypoint": "backend/run.py"
     }
-  ],
-  "routes": [
+  },
+  "rewrites": [
     {
-      "src": "/api/(.*)",
-      "dest": "backend/run.py"
+      "source": "/api/(.*)",
+      "destination": "/backend/run.py"
     },
     {
-      "src": "/(.*)",
-      "dest": "frontend/dist/$1"
+      "source": "/(.*)",
+      "destination": "/frontend/$1"
     }
   ]
 }
