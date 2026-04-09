@@ -137,13 +137,6 @@ All `fetch` calls are in `src/services/api.js`. Components never call `fetch` di
 
 ---
 
-## AI Guidance Files
-
-- `AGENTS.md` — Comprehensive constraints for AI coding agents: layer rules, forbidden patterns, testing requirements, and a checklist for adding new models.
-- `claude.md` — Structural and aesthetic guidelines for AI agents working on this codebase.
-
----
-
 ## Author
 
 Anupam Saha — [linktr.ee/anupamsaha]([https://linktr.ee/helloanupam])
